@@ -1,6 +1,11 @@
 ---
 import PlaceCard from '../components/PlaceCard.astro';
+import { prisma } from '../db';
 import Layout from '../layouts/Layout.astro';
+
+
+const places = await prisma.place.findMany();
+
 
 ---
 
