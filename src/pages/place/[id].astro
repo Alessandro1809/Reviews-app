@@ -1,20 +1,22 @@
 ---
 import type { GetStaticPaths } from 'astro';
-import { actions } from 'astro:actions';
-
 import Layout from '../../layouts/Layout.astro';
+import { prisma } from '../../db';
+import type { Place } from '@prisma/client';
+import Image from 'astro/components/Image.astro';
+import Star from '../../components/Star.astro';
+import Availability from '../../components/Availability.astro';
+export const prerender = true;
 
-export const prerender = true
 
+export const getStaticPaths = (async (): Promise<any>=> {
+  const places = await prisma.place.findMany();
 
-export const getStaticPaths = (async () => {
-  const { data } = await actions.getPlaces();
-
-  if (!data) {
+  if (!places) {
     throw new Error('No data retured from getPlaces');
   }
 
-  return data.map((place) => ({
+  return places.map((place) => ({
     params: {
       id: place.id,
     },
@@ -26,15 +28,44 @@ export const getStaticPaths = (async () => {
 
 const { id } = Astro.params;
 const { place } = Astro.props;
+ if (!place) {
+  return redirect('/');
+ }
+ const pla:Place = place;
 
-console.log(place);
-
+const imageUrl = `/assets/${pla.image}`
 ---
 
 <Layout>
   <div class="grid grid-cols-2 gap-2">
     <div class="bg-white/80 p-5 rounded-xl">
-      <h1 class="text-3xl font-extrabold tracking-wide bg-gradient-to-tr from-rose-500 to-purple-500 bg-clip-text text-transparent w-32 h-20">{}</h1>
+      <h1 class="text-3xl font-extrabold tracking-wide bg-gradient-to-tr from-rose-500 to-purple-500 bg-clip-text text-transparent w-auto h-20">{pla.title}</h1>
+      <p>{pla.description}</p>
+
+      <div class="flex flex-1">
+        {Array.from({ length: Number(pla.avg_rating) }).map((_) => <Star />)}
+      </div>
+
+      <!-- Server Island -->
+    <Availability server:defer placeId={pla.id.toString()}>
+        <p
+          slot="fallback"
+          class="bg-gray-300 mt-5 text-center rounded-xl p-2 animate-pulse"
+        >
+          Espere
+        </p>
+    </Availability>
+
+    </div>
+
+    <div>
+      <Image
+        src={imageUrl}
+        class="w-full h-96 object-cover rounded-xl"
+        width="800"
+        height="800"
+        alt={pla.title}
+      />
     </div>
   </div>
 </Layout>
