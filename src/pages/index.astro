@@ -1,10 +1,11 @@
 ---
+
 import PlaceCard from '../components/PlaceCard.astro';
-import { prisma } from '../db';
 import Layout from '../layouts/Layout.astro';
+import { getPlaces } from '../actions/places/getPlaces.action';
 
+const {data:places = [],error} = await Astro.callAction(getPlaces,{});
 
-const places = await prisma.place.findMany();
 
 
 ---
@@ -13,7 +14,11 @@ const places = await prisma.place.findMany();
 	<h1 class="text-3xl font-extrabold tracking-wide bg-gradient-to-tr from-rose-500 to-purple-500 bg-clip-text text-transparent w-32 h-20">Lugares</h1>
 
 	<div class="grid grid-cols-3 gap-4">
-		<PlaceCard />
+		{
+			places.map((place) => (
+				<PlaceCard place={place}/>
+			))
+		}
 	</div>
 
 </Layout>
